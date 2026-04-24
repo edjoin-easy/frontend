@@ -1,75 +1,92 @@
-# React + TypeScript + Vite
+# easyEd Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript frontend for building EDJOIN export requests and downloading generated Excel workbooks.
 
-Currently, two official plugins are available:
+## What It Does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The app lets a user:
 
-## React Compiler
+- choose a state, search regions, and districts
+- add optional include and exclude keyword filters
+- submit an export request to the backend
+- download the generated workbook and view record and warning counts
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Stack
 
-Note: This will impact Vite dev & build performances.
+- React 19
+- TypeScript
+- Vite
+- React Hook Form + Valibot
+- TanStack Query
+- Tailwind CSS 4
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Install dependencies:
 
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname
-      }
-      // other options...
-    }
-  }
-]);
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Start the dev server:
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname
-      }
-      // other options...
-    }
-  }
-]);
+```bash
+npm run dev
 ```
+
+The Vite dev server proxies EDJOIN metadata requests from `/__edjoin_proxy/*` to `https://www.edjoin.org`.
+
+## Environment
+
+The export request is sent to:
+
+```text
+${VITE_API_BASE_URL}/api/edjoin/export
+```
+
+Required local setup:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+The frontend no longer falls back to a hardcoded backend URL. Set `VITE_API_BASE_URL` explicitly in `.env` for local development and use HTTPS in deployed environments.
+
+## Scripts
+
+- `npm run dev`: start the Vite dev server
+- `npm run build`: type-check and build for production
+- `npm run preview`: preview the production build locally
+- `npm run typecheck`: run TypeScript checks
+- `npm run lint`: run ESLint
+- `npm run test`: run Vitest
+- `npm run coverage`: run Vitest with coverage
+- `npm run format`: apply ESLint fixes and Prettier formatting
+- `npm run prettier`: check formatting with Prettier
+
+## Request Flow
+
+1. The frontend loads states, search regions, and districts through `/__edjoin_proxy/...`.
+2. The user builds a location selection and optional keyword filters.
+3. The frontend posts the request body to the backend export endpoint.
+4. The backend responds with a workbook blob and metadata headers.
+5. The frontend triggers a browser download using the returned filename.
+
+## Security Notes
+
+Security review notes and a lightweight threat model live in [docs/security.md](easyEd/frontend/docs/security.md).
+
+Important deployment expectations:
+
+- set `VITE_API_BASE_URL` explicitly for each environment
+- terminate traffic over HTTPS in deployed environments
+- sanitize download filenames on the client or backend
+- avoid exposing raw backend error details to end users
+- add browser hardening headers such as CSP and frame restrictions at the hosting layer
+
+## Repository Notes
+
+- `src/App.tsx` owns export submission and download handling
+- `src/components/ExportForm/ExportForm.tsx` owns form state and submission gating
+- `src/components/LocationSelector/LocationSelector.tsx` owns state, region, and district selection
+- `src/lib/edjoin.ts` contains EDJOIN metadata fetch helpers and filename parsing

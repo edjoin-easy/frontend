@@ -49,38 +49,43 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Background: rgb(236, 238, 240) — soft cool gray */
+  --background: oklch(0.95 0.004 240);
+  --foreground: oklch(0.18 0.015 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.18 0.015 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.18 0.015 250);
+  /* Primary: rgb(140, 21, 21) — deep crimson cardinal */
+  --primary: oklch(0.4 0.155 27);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.965 0.005 240);
+  --secondary-foreground: oklch(0.25 0.015 250);
+  --muted: oklch(0.965 0.005 240);
+  /* Darkened from 0.556 → 0.46 for WCAG AA contrast at 12px */
+  --muted-foreground: oklch(0.46 0.018 250);
+  --accent: oklch(0.96 0.012 27);
+  --accent-foreground: oklch(0.32 0.08 27);
+  /* Destructive moved off-hue from primary so error states stay distinct */
+  --destructive: oklch(0.58 0.2 32);
+  --border: oklch(0.91 0.006 240);
+  --input: oklch(0.91 0.006 240);
+  /* Ring derived from primary so focus is clearly visible at 3:1+ */
+  --ring: oklch(0.4 0.155 27);
+  --chart-1: oklch(0.4 0.155 27);
+  --chart-2: oklch(0.55 0.13 60);
+  --chart-3: oklch(0.55 0.13 165);
+  --chart-4: oklch(0.5 0.14 220);
+  --chart-5: oklch(0.5 0.16 320);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-foreground: oklch(0.18 0.015 250);
+  --sidebar-primary: oklch(0.4 0.155 27);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.96 0.012 27);
+  --sidebar-accent-foreground: oklch(0.32 0.08 27);
+  --sidebar-border: oklch(0.91 0.006 240);
+  --sidebar-ring: oklch(0.4 0.155 27);
 }
 
 .dark {
@@ -126,5 +131,21 @@
   }
   html {
     @apply font-sans;
+    /* Reserve space for the vertical scrollbar so the page does not shift
+       horizontally when content grows past the viewport (e.g. when a region
+       is selected and Step 3 expands). */
+    scrollbar-gutter: stable;
+  }
+}
+
+@keyframes progressSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(200%);
   }
 }

@@ -35,7 +35,14 @@ interface PollStatusJson {
   status?: string;
 }
 
+interface StartExportJobResponse {
+  job_id?: number | string;
+  poll_url?: string;
+  status?: string;
+}
+
 export interface StartedExportJob {
+  jobId: string;
   pollUrl: string;
 }
 
@@ -62,8 +69,8 @@ function toAbsoluteUrl(baseUrl: string, value: string) {
 function normalizeStatus(rawStatus: string | null | undefined) {
   const normalized = rawStatus?.trim().replaceAll("_", " ").toUpperCase();
 
-  if (normalized === "IN PROGRESS" || normalized === "DONE" || normalized === "ERROR") {
-    return normalized;
+  if (normalized === "IN PROGRESS" || normalized === "IN PROGRES" || normalized === "DONE" || normalized === "ERROR") {
+    return normalized === "IN PROGRES" ? "IN PROGRESS" : normalized;
   }
 
   return null;
@@ -101,31 +108,6 @@ function getTerminalStatus(response: Response): "DONE" | "ERROR" {
   return response.ok ? "DONE" : "ERROR";
 }
 
-async function extractPollUrl(response: Response, apiBaseUrl: string) {
-  const headerUrl = response.headers.get("Location");
-  if (headerUrl?.trim()) {
-    return toAbsoluteUrl(apiBaseUrl, headerUrl);
-  }
-
-  const contentType = response.headers.get("Content-Type") ?? "";
-
-  if (contentType.includes("application/json")) {
-    const payload = (await response.json()) as unknown;
-    const jsonUrl = getPollUrlFromJson(payload);
-
-    if (jsonUrl) {
-      return toAbsoluteUrl(apiBaseUrl, jsonUrl);
-    }
-  } else {
-    const text = (await response.text()).trim();
-    if (text) {
-      return toAbsoluteUrl(apiBaseUrl, text);
-    }
-  }
-
-  throw new Error("Export started, but the backend did not return a polling URL.");
-}
-
 export async function startExportJob(apiBaseUrl: string, payload: StartExportJobPayload): Promise<StartedExportJob> {
   const response = await fetch(toAbsoluteUrl(apiBaseUrl, EXPORT_ENDPOINT_PATH), {
     body: JSON.stringify(payload),
@@ -144,9 +126,24 @@ export async function startExportJob(apiBaseUrl: string, payload: StartExportJob
     throw new Error(GENERIC_EXPORT_ERROR_MESSAGE);
   }
 
-  return {
-    pollUrl: await extractPollUrl(response, apiBaseUrl)
-  };
+  if (response.status !== 202) {
+    throw new Error("Export start returned an unexpected response.");
+  }
+
+  const startPayload = (await response.json()) as StartExportJobResponse;
+  const rawPollUrl =
+    typeof startPayload.poll_url === "string" && startPayload.poll_url.trim()
+      ? startPayload.poll_url
+      : getPollUrlFromJson(startPayload);
+  const pollUrl = rawPollUrl ? toAbsoluteUrl(apiBaseUrl, rawPollUrl) : null;
+  const jobId = startPayload.job_id == null ? null : String(startPayload.job_id);
+  const status = normalizeStatus(startPayload.status);
+
+  if (!jobId || !pollUrl || status !== "IN PROGRESS") {
+    throw new Error("Export started, but the backend response was missing job metadata.");
+  }
+
+  return { jobId, pollUrl };
 }
 
 export async function pollExportJob(pollUrl: string): Promise<PollExportJobResult> {
@@ -163,16 +160,19 @@ export async function pollExportJob(pollUrl: string): Promise<PollExportJobResul
         kind: "progress"
       };
     }
+
+    throw new Error("Export polling returned an unexpected JSON response.");
   }
 
   const blob = await response.blob();
+  const headerStatus = normalizeStatus(response.headers.get("X-EDJOIN-Status"));
 
   return {
     blob,
     filename: filenameFromDisposition(response.headers.get("Content-Disposition")),
     kind: "terminal",
     recordCount: response.headers.get("X-EDJOIN-Record-Count"),
-    status: getTerminalStatus(response),
+    status: headerStatus === "DONE" || headerStatus === "ERROR" ? headerStatus : getTerminalStatus(response),
     warningCount: response.headers.get("X-EDJOIN-Warning-Count")
   };
 }

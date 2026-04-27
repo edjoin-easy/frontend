@@ -1,53 +1,60 @@
-import { useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import { useState } from "react";
+import { AppHeader } from "./components/AppHeader/AppHeader";
+import { AppIntro } from "./components/AppIntro/AppIntro";
+import { ExportForm, type ExportFormValues } from "./components/ExportForm/ExportForm";
+import { ExportStatusPanel } from "./components/ExportStatusPanel/ExportStatusPanel";
+import { filenameFromDisposition } from "./lib/edjoin";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
+const GENERIC_EXPORT_ERROR_MESSAGE = "Export failed. Please try again. If the problem persists, contact support.";
 
-function parseKeywords(value: string) {
-  return value
-    .split(",")
-    .map((keyword) => keyword.trim())
-    .filter(Boolean);
-}
-
-function filenameFromDisposition(disposition: string | null) {
-  if (!disposition) return "edjoin-export.xlsx";
-  const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/);
-  if (encoded) return decodeURIComponent(encoded[1]);
-  const plain = disposition.match(/filename="?([^"]+)"?/);
-  return plain?.[1] ?? "edjoin-export.xlsx";
-}
+type ExportStatus = "idle" | "loading" | "success" | "error";
 
 function App() {
-  const [location, setLocation] = useState("Alameda");
-  const [includeKeywords, setIncludeKeywords] = useState("elementary, kindergarten, tk, sped");
-  const [excludeKeywords, setExcludeKeywords] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<ExportStatus>("idle");
+  const [recordCount, setRecordCount] = useState<string | null>(null);
+  const [warningCount, setWarningCount] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const canSubmit = useMemo(() => location.trim().length >= 2 && status !== "loading", [location, status]);
+  // ── Submit ────────────────────────────────────────────────────────────────
+  async function handleSubmit(values: ExportFormValues) {
+    if (!API_BASE_URL) {
+      setStatus("error");
+      setErrorMessage("Missing VITE_API_BASE_URL. Configure the frontend to point at the project backend.");
+      return;
+    }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!canSubmit) return;
+    const selectedState = values.state;
+    if (!selectedState) return;
+
+    const hasSelectedDistricts = selectedState.children.some((region) => region.children.length > 0);
+    if (!hasSelectedDistricts) return;
 
     setStatus("loading");
-    setMessage("Crawling EDJOIN and preparing the workbook...");
+    setErrorMessage("");
+    setRecordCount(null);
+    setWarningCount(null);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/edjoin/export`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          location,
-          include_keywords: parseKeywords(includeKeywords),
-          exclude_keywords: parseKeywords(excludeKeywords)
+          locations: selectedState,
+          include_keywords: values.includeKeywords,
+          exclude_keywords: values.excludeKeywords
         })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || `Export failed with ${response.status}`);
+
+        console.error("EDJOIN export request failed", {
+          errorText,
+          status: response.status
+        });
+
+        throw new Error(GENERIC_EXPORT_ERROR_MESSAGE);
       }
 
       const blob = await response.blob();
@@ -60,64 +67,41 @@ function App() {
       anchor.remove();
       URL.revokeObjectURL(downloadUrl);
 
-      const recordCount = response.headers.get("X-EDJOIN-Record-Count") ?? "0";
-      const warningCount = response.headers.get("X-EDJOIN-Warning-Count") ?? "0";
+      setRecordCount(response.headers.get("X-EDJOIN-Record-Count") ?? "0");
+      setWarningCount(response.headers.get("X-EDJOIN-Warning-Count") ?? "0");
       setStatus("success");
-      setMessage(`Downloaded ${recordCount} records. ${warningCount} warnings were included in the workbook.`);
     } catch (error) {
       setStatus("error");
-      setMessage(error instanceof Error ? error.message : "Export failed.");
+      setErrorMessage(error instanceof Error ? error.message : GENERIC_EXPORT_ERROR_MESSAGE);
     }
   }
 
+  function handleReset() {
+    setStatus("idle");
+    setErrorMessage("");
+    setRecordCount(null);
+    setWarningCount(null);
+  }
+
   return (
-    <main className="app-shell">
-      <section className="workspace">
-        <div className="heading">
-          <p>EDJOIN exporter</p>
-          <h1>Build a raw Excel export from live EDJOIN search results.</h1>
-        </div>
-
-        <form className="panel" onSubmit={handleSubmit}>
-          <label>
-            <span>Location</span>
-            <input
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              placeholder="Alameda, San Mateo, Santa Clara..."
-            />
-          </label>
-
-          <label>
-            <span>Include keywords</span>
-            <input
-              value={includeKeywords}
-              onChange={(event) => setIncludeKeywords(event.target.value)}
-              placeholder="elementary, kindergarten, tk"
-            />
-          </label>
-
-          <label>
-            <span>Exclude keywords</span>
-            <input
-              value={excludeKeywords}
-              onChange={(event) => setExcludeKeywords(event.target.value)}
-              placeholder="substitute, classified"
-            />
-          </label>
-
-          <button disabled={!canSubmit} type="submit">
-            {status === "loading" && <span className="spinner" aria-hidden="true" />}
-            Export Excel
-          </button>
-
-          {message && (
-            <div className={`status ${status}`}>
-              <span>{message}</span>
-            </div>
-          )}
-        </form>
-      </section>
+    <main className="bg-background flex min-h-screen flex-col items-center justify-start px-4 pt-16 pb-16 sm:pt-20 sm:pb-20">
+      <div className="flex w-full max-w-4xl flex-col gap-8">
+        <AppHeader />
+        <AppIntro />
+        <ExportForm
+          isError={status === "error"}
+          isIdle={status === "idle"}
+          isLoading={status === "loading"}
+          onSubmit={handleSubmit}
+        />
+        <ExportStatusPanel
+          errorMessage={errorMessage}
+          onReset={handleReset}
+          recordCount={recordCount}
+          status={status}
+          warningCount={warningCount}
+        />
+      </div>
     </main>
   );
 }

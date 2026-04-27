@@ -1,3 +1,9 @@
+## [0.6.0](https://github.com/edjoin-easy/frontend/compare/v0.5.0...v0.6.0) (2026-04-27)
+
+### Features
+
+* updates ([1c1d478](https://github.com/edjoin-easy/frontend/commit/1c1d478ab78c9fc09ed26dbf13fbe483ea40df28))
+
 ## [0.5.0](https://github.com/edjoin-easy/frontend/compare/v0.4.0...v0.5.0) (2026-04-27)
 
 ### Features

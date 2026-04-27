@@ -1,8 +1,9 @@
 import { valibotResolver } from "@hookform/resolvers/valibot";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import * as v from "valibot";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -53,8 +54,6 @@ export type ExportFormValues = v.InferInput<typeof exportFormSchema>;
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ExportFormProps {
-  isError: boolean;
-  isIdle: boolean;
   isLoading: boolean;
   onSubmit: (values: ExportFormValues) => void | Promise<void>;
 }
@@ -115,7 +114,7 @@ function toSelectorSelection(
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ExportForm({ isError, isIdle, isLoading, onSubmit }: ExportFormProps) {
+export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
   const [hasTriedSubmit, setHasTriedSubmit] = useState(false);
   const [regionUiState, setRegionUiState] = useState<Record<number, RegionUiState>>({});
   const { control, handleSubmit, setValue } = useForm<ExportFormValues>({
@@ -190,13 +189,11 @@ export function ExportForm({ isError, isIdle, isLoading, onSubmit }: ExportFormP
               disabled={isLoading}
               invalidRegionIds={invalidRegionIds}
             />
-            <FieldError>
-              {!isLoading && (isIdle || isError || hasTriedSubmit) && (hasNoSelections || hasIncompleteSelections)
-                ? hasNoSelections
-                  ? "Select at least one district to continue."
-                  : `Select districts for ${incompleteRegionIds.length} region${incompleteRegionIds.length === 1 ? "" : "s"} above.`
-                : null}
-            </FieldError>
+            {!isLoading && hasTriedSubmit && hasIncompleteSelections && !hasNoSelections ? (
+              <FieldError>
+                {`Select districts for ${incompleteRegionIds.length} region${incompleteRegionIds.length === 1 ? "" : "s"} above.`}
+              </FieldError>
+            ) : null}
           </FieldContent>
         </Field>
 
@@ -261,7 +258,16 @@ export function ExportForm({ isError, isIdle, isLoading, onSubmit }: ExportFormP
       </FieldGroup>
 
       {/* ── Submit ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
+        {!isLoading && hasTriedSubmit && hasNoSelections ? (
+          <Alert variant="destructive" aria-live="polite">
+            <TriangleAlert aria-hidden="true" />
+            <AlertTitle>No locations selected</AlertTitle>
+            <AlertDescription>
+              Choose a state, then add the regions and at least one district you want to export.
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <Button type="submit" size="default" disabled={!canSubmit} className="h-12 w-full text-sm font-semibold">
           {isLoading ? (
             <>

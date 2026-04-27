@@ -95,12 +95,7 @@ function App() {
       <div className="flex w-full max-w-4xl flex-col gap-8">
         <AppHeader />
         <AppIntro />
-        <ExportForm
-          isError={status === "error"}
-          isIdle={status === "idle"}
-          isLoading={status === "loading"}
-          onSubmit={handleSubmit}
-        />
+        <ExportForm isLoading={status === "loading"} onSubmit={handleSubmit} />
         <ExportStatusPanel
           activeDistrict={activeDistrict}
           errorMessage={errorMessage}

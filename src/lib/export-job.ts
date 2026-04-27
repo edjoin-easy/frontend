@@ -116,7 +116,9 @@ function getPollUrlFromJson(payload: unknown) {
 
 function getTerminalStatus(response: Response): "DONE" | "ERROR" {
   const headerStatus =
-    normalizeStatus(response.headers.get("X-Export-Status")) ?? normalizeStatus(response.headers.get("X-Job-Status"));
+    normalizeStatus(response.headers.get("X-EDJOIN-Status")) ??
+    normalizeStatus(response.headers.get("X-Export-Status")) ??
+    normalizeStatus(response.headers.get("X-Job-Status"));
 
   if (headerStatus === "DONE" || headerStatus === "ERROR") {
     return headerStatus;
@@ -143,10 +145,6 @@ export async function startExportJob(apiBaseUrl: string, payload: StartExportJob
     throw new Error(GENERIC_EXPORT_ERROR_MESSAGE);
   }
 
-  if (response.status !== 202) {
-    throw new Error("Export start returned an unexpected response.");
-  }
-
   const startPayload = (await response.json()) as StartExportJobResponse;
   const rawPollUrl =
     typeof startPayload.poll_url === "string" && startPayload.poll_url.trim()
@@ -156,7 +154,7 @@ export async function startExportJob(apiBaseUrl: string, payload: StartExportJob
   const jobId = startPayload.job_id == null ? null : String(startPayload.job_id);
   const status = normalizeStatus(startPayload.status);
 
-  if (!jobId || !pollUrl || status !== "IN PROGRESS") {
+  if (!jobId || !pollUrl || (status !== "IN PROGRESS" && status !== "DONE")) {
     throw new Error("Export started, but the backend response was missing job metadata.");
   }
 
@@ -182,14 +180,13 @@ export async function pollExportJob(pollUrl: string): Promise<PollExportJobResul
   }
 
   const blob = await response.blob();
-  const headerStatus = normalizeStatus(response.headers.get("X-EDJOIN-Status"));
 
   return {
     blob,
     filename: filenameFromDisposition(response.headers.get("Content-Disposition")),
     kind: "terminal",
     recordCount: response.headers.get("X-EDJOIN-Record-Count"),
-    status: headerStatus === "DONE" || headerStatus === "ERROR" ? headerStatus : getTerminalStatus(response),
+    status: getTerminalStatus(response),
     warningCount: response.headers.get("X-EDJOIN-Warning-Count")
   };
 }

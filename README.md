@@ -69,9 +69,10 @@ The frontend no longer falls back to a hardcoded backend URL. Set `VITE_API_BASE
 1. The frontend loads states, search regions, and districts through `/__edjoin_proxy/...`.
 2. The user builds a location selection and optional keyword filters.
 3. The frontend posts the request body to the backend export endpoint.
-4. The backend responds with a long-poll URL for the export job.
-5. The frontend polls that URL until the backend reports `DONE` or `ERROR`.
-6. The frontend triggers a browser download using the returned filename and blob.
+4. The backend responds with `202 Accepted`, plus `job_id`, `status`, and `poll_url`.
+5. The frontend polls `GET /api/edjoin/export/{job_id}` and receives JSON while the job is still in progress.
+6. When polling finishes, the backend returns the Excel blob and the terminal status in `X-EDJOIN-Status`.
+7. The frontend triggers a browser download using the returned filename and blob.
 
 ## Security Notes
 

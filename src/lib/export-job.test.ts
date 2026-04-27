@@ -8,7 +8,7 @@ describe("export-job", () => {
 
   it("resolves the poll URL returned by the start endpoint", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(JSON.stringify({ poll_url: "/api/edjoin/export/jobs/123" }), {
+      new Response(JSON.stringify({ job_id: 123, poll_url: "/api/edjoin/export/123", status: "IN PROGRESS" }), {
         headers: {
           "Content-Type": "application/json"
         },
@@ -27,7 +27,8 @@ describe("export-job", () => {
     });
 
     expect(result).toEqual({
-      pollUrl: "http://localhost:8000/api/edjoin/export/jobs/123"
+      jobId: "123",
+      pollUrl: "http://localhost:8000/api/edjoin/export/123"
     });
   });
 
@@ -40,12 +41,27 @@ describe("export-job", () => {
       })
     );
 
-    const result = await pollExportJob("http://localhost:8000/api/edjoin/export/jobs/123");
+    const result = await pollExportJob("http://localhost:8000/api/edjoin/export/123");
 
     expect(result).toEqual({
       currentDistrict: "Alameda USD",
       kind: "progress"
     });
+  });
+
+  it("fails cleanly on an unexpected JSON poll response", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ status: "ERROR" }), {
+        headers: {
+          "Content-Type": "application/json"
+        },
+        status: 200
+      })
+    );
+
+    await expect(pollExportJob("http://localhost:8000/api/edjoin/export/123")).rejects.toThrow(
+      "Export polling returned an unexpected JSON response."
+    );
   });
 
   it("returns a terminal blob response with metadata", async () => {
@@ -56,13 +72,13 @@ describe("export-job", () => {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
           "X-EDJOIN-Record-Count": "42",
           "X-EDJOIN-Warning-Count": "3",
-          "X-Export-Status": "ERROR"
+          "X-EDJOIN-Status": "ERROR"
         },
         status: 200
       })
     );
 
-    const result = await pollExportJob("http://localhost:8000/api/edjoin/export/jobs/123");
+    const result = await pollExportJob("http://localhost:8000/api/edjoin/export/123");
 
     expect(result.kind).toBe("terminal");
     if (result.kind !== "terminal") {

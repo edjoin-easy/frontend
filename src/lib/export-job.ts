@@ -62,8 +62,25 @@ export interface CompletedExportJobResult {
 
 export type PollExportJobResult = InProgressExportJobResult | CompletedExportJobResult;
 
+function normalizeBaseUrl(baseUrl: string) {
+  const trimmed = baseUrl.trim();
+  const withScheme = trimmed.includes("://") ? trimmed : `http://${trimmed}`;
+
+  try {
+    return new URL(withScheme).toString();
+  } catch {
+    throw new Error("Invalid VITE_API_BASE_URL. Use a full origin such as http://localhost:8000.");
+  }
+}
+
 function toAbsoluteUrl(baseUrl: string, value: string) {
-  return new URL(value, baseUrl).toString();
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+
+  try {
+    return new URL(value, normalizedBaseUrl).toString();
+  } catch {
+    throw new Error("The backend returned an invalid polling URL.");
+  }
 }
 
 function normalizeStatus(rawStatus: string | null | undefined) {

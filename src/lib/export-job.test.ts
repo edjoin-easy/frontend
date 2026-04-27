@@ -32,6 +32,50 @@ describe("export-job", () => {
     });
   });
 
+  it("accepts a base URL without an explicit scheme in local development", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ job_id: 123, poll_url: "/api/edjoin/export/123", status: "IN PROGRESS" }), {
+        headers: {
+          "Content-Type": "application/json"
+        },
+        status: 202
+      })
+    );
+
+    const result = await startExportJob("localhost:8000", {
+      exclude_keywords: ["temp"],
+      include_keywords: ["teacher"],
+      locations: {
+        children: [],
+        name: "California",
+        stateId: 5
+      }
+    });
+
+    expect(result).toEqual({
+      jobId: "123",
+      pollUrl: "http://localhost:8000/api/edjoin/export/123"
+    });
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/edjoin/export",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("fails cleanly on an invalid backend base URL", async () => {
+    await expect(
+      startExportJob("://bad-url", {
+        exclude_keywords: [],
+        include_keywords: [],
+        locations: {
+          children: [],
+          name: "California",
+          stateId: 5
+        }
+      })
+    ).rejects.toThrow("Invalid VITE_API_BASE_URL. Use a full origin such as http://localhost:8000.");
+  });
+
   it("returns progress details while the job is still running", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ current_district: "Alameda USD", status: "IN PROGRESS" }), {

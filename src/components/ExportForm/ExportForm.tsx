@@ -1,5 +1,5 @@
 import { valibotResolver } from "@hookform/resolvers/valibot";
-import { Download, Loader2, TriangleAlert } from "lucide-react";
+import { AlertCircle, Download, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import * as v from "valibot";
@@ -143,7 +143,6 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
   );
   const hasNoSelections = locationIds.length === 0;
   const hasIncompleteSelections = incompleteRegionIds.length > 0;
-  const canSubmit = !hasNoSelections && !hasIncompleteSelections && !isLoading;
   const invalidRegionIds = hasTriedSubmit ? incompleteRegionIds : [];
 
   return (
@@ -261,14 +260,14 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
       <div className="flex flex-col gap-3">
         {!isLoading && hasTriedSubmit && hasNoSelections ? (
           <Alert variant="destructive" aria-live="polite">
-            <TriangleAlert aria-hidden="true" />
+            <AlertCircle aria-hidden="true" />
             <AlertTitle>No locations selected</AlertTitle>
             <AlertDescription>
               Choose a state, then add the regions and at least one district you want to export.
             </AlertDescription>
           </Alert>
         ) : null}
-        <Button type="submit" size="default" disabled={!canSubmit} className="h-12 w-full text-sm font-semibold">
+        <Button type="submit" size="default" disabled={isLoading} className="h-12 w-full text-sm font-semibold">
           {isLoading ? (
             <>
               <Loader2 data-icon="inline-start" className="animate-spin" aria-hidden="true" />

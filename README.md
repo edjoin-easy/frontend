@@ -69,8 +69,9 @@ The frontend no longer falls back to a hardcoded backend URL. Set `VITE_API_BASE
 1. The frontend loads states, search regions, and districts through `/__edjoin_proxy/...`.
 2. The user builds a location selection and optional keyword filters.
 3. The frontend posts the request body to the backend export endpoint.
-4. The backend responds with a workbook blob and metadata headers.
-5. The frontend triggers a browser download using the returned filename.
+4. The backend responds with a long-poll URL for the export job.
+5. The frontend polls that URL until the backend reports `DONE` or `ERROR`.
+6. The frontend triggers a browser download using the returned filename and blob.
 
 ## Security Notes
 
@@ -86,7 +87,8 @@ Important deployment expectations:
 
 ## Repository Notes
 
-- `src/App.tsx` owns export submission and download handling
+- `src/App.tsx` owns export submission, polling, and download handling
 - `src/components/ExportForm/ExportForm.tsx` owns form state and submission gating
 - `src/components/LocationSelector/LocationSelector.tsx` owns state, region, and district selection
 - `src/lib/edjoin.ts` contains EDJOIN metadata fetch helpers and filename parsing
+- `src/lib/export-job.ts` contains backend export job start/poll helpers

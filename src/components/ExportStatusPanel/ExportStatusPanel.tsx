@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ExportStatusPanelProps {
+  activeDistrict: string | null;
   errorMessage: string;
   onReset: () => void;
   recordCount: string | null;
@@ -29,6 +30,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 export function ExportStatusPanel({
+  activeDistrict,
   errorMessage,
   onReset,
   recordCount,
@@ -70,7 +72,11 @@ export function ExportStatusPanel({
               <span className={index === 0 ? "text-foreground font-medium" : "text-muted-foreground"}>{step}</span>
             </div>
           ))}
-          <p className="text-muted-foreground text-xs">This may take a moment depending on the number of results.</p>
+          <p className="text-muted-foreground text-xs">
+            {activeDistrict
+              ? `Currently parsing ${activeDistrict}.`
+              : "Waiting for the backend to report the active district."}
+          </p>
         </CardContent>
       </Card>
     );
@@ -84,7 +90,7 @@ export function ExportStatusPanel({
             <CheckCircle2 className="text-primary size-5" aria-hidden="true" />
             <div className="flex flex-col gap-1">
               <CardTitle className="text-base">Export complete</CardTitle>
-              <p className="text-muted-foreground text-sm">Your workbook was downloaded automatically.</p>
+              <p className="text-muted-foreground text-sm">Your workbook was downloaded from the polling result.</p>
             </div>
           </div>
         </CardHeader>
@@ -117,9 +123,14 @@ export function ExportStatusPanel({
 
   if (status === "error") {
     return (
-      <Alert variant="destructive" className="border-destructive/30 rounded-2xl shadow-sm">
+      <Alert
+        variant={recordCount !== null || warningCount !== null ? "default" : "destructive"}
+        className="rounded-2xl shadow-sm"
+      >
         <AlertCircle aria-hidden="true" />
-        <AlertTitle>Export failed</AlertTitle>
+        <AlertTitle>
+          {recordCount !== null || warningCount !== null ? "Export finished with issues" : "Export failed"}
+        </AlertTitle>
         <AlertDescription className="break-words">{errorMessage}</AlertDescription>
         <div className="mt-3">
           <Button

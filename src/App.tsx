@@ -3,15 +3,21 @@ import { AppHeader } from "./components/AppHeader/AppHeader";
 import { AppIntro } from "./components/AppIntro/AppIntro";
 import { ExportForm, type ExportFormValues } from "./components/ExportForm/ExportForm";
 import { ExportStatusPanel } from "./components/ExportStatusPanel/ExportStatusPanel";
-import { filenameFromDisposition } from "./lib/edjoin";
+import { downloadWorkbook, GENERIC_EXPORT_ERROR_MESSAGE, pollExportJob, startExportJob } from "./lib/export-job";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
-const GENERIC_EXPORT_ERROR_MESSAGE = "Export failed. Please try again. If the problem persists, contact support.";
-
 type ExportStatus = "idle" | "loading" | "success" | "error";
+const POLL_INTERVAL_MS = 2000;
+
+function sleep(milliseconds: number) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, milliseconds);
+  });
+}
 
 function App() {
   const [status, setStatus] = useState<ExportStatus>("idle");
+  const [activeDistrict, setActiveDistrict] = useState<string | null>(null);
   const [recordCount, setRecordCount] = useState<string | null>(null);
   const [warningCount, setWarningCount] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -31,46 +37,46 @@ function App() {
     if (!hasSelectedDistricts) return;
 
     setStatus("loading");
+    setActiveDistrict(null);
     setErrorMessage("");
     setRecordCount(null);
     setWarningCount(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/edjoin/export`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          locations: selectedState,
-          include_keywords: values.includeKeywords,
-          exclude_keywords: values.excludeKeywords
-        })
+      const { pollUrl } = await startExportJob(API_BASE_URL, {
+        exclude_keywords: values.excludeKeywords,
+        include_keywords: values.includeKeywords,
+        locations: selectedState
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      while (true) {
+        const result = await pollExportJob(pollUrl);
 
-        console.error("EDJOIN export request failed", {
-          errorText,
-          status: response.status
-        });
+        if (result.kind === "progress") {
+          setActiveDistrict(result.currentDistrict);
+          await sleep(POLL_INTERVAL_MS);
+          continue;
+        }
 
-        throw new Error(GENERIC_EXPORT_ERROR_MESSAGE);
+        downloadWorkbook(result.blob, result.filename);
+        setActiveDistrict(null);
+        setRecordCount(result.recordCount ?? "0");
+        setWarningCount(result.warningCount ?? "0");
+
+        if (result.status === "DONE") {
+          setStatus("success");
+          setErrorMessage("");
+        } else {
+          setStatus("error");
+          setErrorMessage(
+            "Export completed with errors. The workbook download contains the parsed rows available so far."
+          );
+        }
+
+        break;
       }
-
-      const blob = await response.blob();
-      const downloadUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = downloadUrl;
-      anchor.download = filenameFromDisposition(response.headers.get("Content-Disposition"));
-      document.body.append(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(downloadUrl);
-
-      setRecordCount(response.headers.get("X-EDJOIN-Record-Count") ?? "0");
-      setWarningCount(response.headers.get("X-EDJOIN-Warning-Count") ?? "0");
-      setStatus("success");
     } catch (error) {
+      setActiveDistrict(null);
       setStatus("error");
       setErrorMessage(error instanceof Error ? error.message : GENERIC_EXPORT_ERROR_MESSAGE);
     }
@@ -78,6 +84,7 @@ function App() {
 
   function handleReset() {
     setStatus("idle");
+    setActiveDistrict(null);
     setErrorMessage("");
     setRecordCount(null);
     setWarningCount(null);
@@ -95,6 +102,7 @@ function App() {
           onSubmit={handleSubmit}
         />
         <ExportStatusPanel
+          activeDistrict={activeDistrict}
           errorMessage={errorMessage}
           onReset={handleReset}
           recordCount={recordCount}

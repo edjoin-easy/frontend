@@ -18,7 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
@@ -161,7 +161,9 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className={cn("transition-shadow", locked && "bg-muted/30 shadow-none", !locked && "shadow-xs")}>
+    <Card
+      className={cn("overflow-visible transition-shadow", locked && "bg-muted/30 shadow-none", !locked && "shadow-xs")}
+    >
       <CardHeader className="flex-row items-start gap-3 px-4 pt-4 pb-3">
         <StepBadge step={step} completed={completed} locked={locked} />
         <div className="flex min-w-0 flex-col gap-1">
@@ -679,7 +681,7 @@ function DistrictGroup({
             {isLoading && <Loader2 className="text-muted-foreground size-3.5 animate-spin" aria-hidden="true" />}
           </div>
         </AccordionTrigger>
-        <AccordionContent className="bg-muted/20 pb-0">
+        <AccordionContent className="bg-muted/20 h-auto pb-0">
           {isInvalid && !isLoading && !isError && (
             <>
               <Alert id={errorId} variant="destructive" className="m-3 mb-0">
@@ -756,6 +758,7 @@ function DistrictGroup({
               ) : (
                 <ScrollArea
                   className="max-h-[calc(5*2.5rem+0.5rem)]"
+                  viewportClassName="[&>div]:!block [&>div]:min-w-0"
                   style={{ height: `${districtScrollHeightRem}rem` }}
                 >
                   <div className="py-1">
@@ -825,15 +828,17 @@ function SummaryPanel({
 
   return (
     <Card className="shadow-xs">
-      <CardHeader className="flex-row items-center justify-between gap-2 px-4 py-3">
+      <CardHeader className="items-center gap-2 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2">
           <MapPin className="text-primary size-4 shrink-0" aria-hidden="true" />
           <CardTitle className="truncate text-sm font-semibold">Selected Locations</CardTitle>
         </div>
-        {regions.length > 0 && (
-          <Button onClick={onClearAll} className="text-sm" variant="link" size="sm">
-            Clear all
-          </Button>
+        {selection.state && (
+          <CardAction className="self-center">
+            <Button onClick={onClearAll} className="h-auto p-0 text-sm" variant="link" size="sm">
+              Clear all
+            </Button>
+          </CardAction>
         )}
       </CardHeader>
 
@@ -1086,8 +1091,7 @@ export function LocationSelector({ value, onChange, disabled, invalidRegionIds =
   }
 
   function handleClearAll() {
-    if (!state) return;
-    onChange({ state: { ...state, children: [] } });
+    onChange({ state: null });
   }
 
   const regionsLocked = !state;

@@ -1,3 +1,9 @@
+## [0.9.0](https://github.com/edjoin-easy/frontend/compare/v0.8.0...v0.9.0) (2026-07-08)
+
+### Features
+
+* **-:** update shadcn components to latest version ([69ac6fe](https://github.com/edjoin-easy/frontend/commit/69ac6fea3ee5b7b92c3c5d6bfb9ed1404f48d177))
+
 ## [0.8.0](https://github.com/edjoin-easy/frontend/compare/v0.7.0...v0.8.0) (2026-07-08)
 
 ### Features

@@ -92,20 +92,16 @@ function toSelectorSelection(
 
   return {
     state: {
-      children: state.children.map(
-        (region): SelectedSearchRegionNode => ({
-          allSelected: regionUiState[region.searchRegionId]?.allSelected ?? false,
-          children: region.children.map(
-            (district): SelectedDistrictNode => ({
-              districtId: district.districtId,
-              name: district.name
-            })
-          ),
-          name: region.name,
-          searchRegionId: region.searchRegionId,
-          totalDistrictCount: regionUiState[region.searchRegionId]?.totalDistrictCount ?? null
-        })
-      ),
+      children: state.children.map((region): SelectedSearchRegionNode => ({
+        allSelected: regionUiState[region.searchRegionId]?.allSelected ?? false,
+        children: region.children.map((district): SelectedDistrictNode => ({
+          districtId: district.districtId,
+          name: district.name
+        })),
+        name: region.name,
+        searchRegionId: region.searchRegionId,
+        totalDistrictCount: regionUiState[region.searchRegionId]?.totalDistrictCount ?? null
+      })),
       name: state.name,
       stateId: state.stateId
     } satisfies SelectedStateNode

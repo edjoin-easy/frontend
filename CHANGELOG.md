@@ -1,3 +1,9 @@
+## [0.8.0](https://github.com/edjoin-easy/frontend/compare/v0.7.0...v0.8.0) (2026-07-08)
+
+### Features
+
+* **-:** bump up dependencies ([709384e](https://github.com/edjoin-easy/frontend/commit/709384e9304fd33597bd2d4159085c68534a78bc))
+
 ## [0.7.0](https://github.com/edjoin-easy/frontend/compare/v0.6.0...v0.7.0) (2026-04-27)
 
 ### Features

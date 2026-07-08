@@ -34,6 +34,10 @@ interface EdjoinDistrictsResponse {
   haserrors?: boolean;
 }
 
+// Shown when EDJOIN responds with `haserrors`. Thrown (not alerted) so React
+// Query surfaces it through each list's inline ErrorState + Retry affordance.
+export const EDJOIN_UNAVAILABLE_MESSAGE = "EDJOIN is not available right now. Please try again in a moment.";
+
 const EDJOIN_STATES_URL = "/__edjoin_proxy/Home/LoadStates";
 const EDJOIN_SEARCH_REGIONS_URL = "/__edjoin_proxy/Home/LoadSearchRegions";
 const EDJOIN_DISTRICTS_URL = "/__edjoin_proxy/Home/LoadDistricts";
@@ -48,8 +52,7 @@ export async function loadEdjoinStates() {
   const payload = (await response.json()) as EdjoinStatesResponse;
 
   if (payload.haserrors) {
-    alert("edjoin is not available now");
-    return [];
+    throw new Error(EDJOIN_UNAVAILABLE_MESSAGE);
   }
 
   return Array.isArray(payload.data) ? payload.data : [];
@@ -65,8 +68,7 @@ export async function loadEdjoinSearchRegions(stateId: string) {
   const payload = (await response.json()) as EdjoinSearchRegionsResponse;
 
   if (payload.haserrors) {
-    alert("edjoin is not available now");
-    return [];
+    throw new Error(EDJOIN_UNAVAILABLE_MESSAGE);
   }
 
   return Array.isArray(payload.data) ? payload.data : [];
@@ -82,8 +84,7 @@ export async function loadEdjoinDistricts(countyId: string) {
   const payload = (await response.json()) as EdjoinDistrictsResponse;
 
   if (payload.haserrors) {
-    alert("edjoin is not available now");
-    return [];
+    throw new Error(EDJOIN_UNAVAILABLE_MESSAGE);
   }
 
   return Array.isArray(payload.data) ? payload.data : [];

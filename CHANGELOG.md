@@ -1,3 +1,14 @@
+## [0.11.0](https://github.com/edjoin-easy/frontend/compare/v0.10.0...v0.11.0) (2026-07-09)
+
+### Features
+
+* enhance error state UI with retry button styling and layout adjustments ([7748b19](https://github.com/edjoin-easy/frontend/commit/7748b19b2a793c7a901e4db90edc9f2386ef23af))
+* enhance ExportForm keyword input instructions with keyboard key labels ([16cd01e](https://github.com/edjoin-easy/frontend/commit/16cd01eaf40ed810ee55a3197958e0b08ea0c1b2))
+* refine export form validation and status panel feedback logic ([492b69b](https://github.com/edjoin-easy/frontend/commit/492b69b593a7ebf949050aa0f47ab711bb214b7e))
+* replace alert messages with custom error for EDJOIN API errors ([f5e6baa](https://github.com/edjoin-easy/frontend/commit/f5e6baa49a5d54587f98c1ccaa604ccc4e69a081))
+* small clean up ([bb10a92](https://github.com/edjoin-easy/frontend/commit/bb10a92f25b93a1d6b6faa78d9ab5d15a5d7a42b))
+* url changes for EDJOIN metadata endpoints ([791e46a](https://github.com/edjoin-easy/frontend/commit/791e46ac0c0c32900a12d15d9d7d745a878bdf26))
+
 ## [0.10.0](https://github.com/edjoin-easy/frontend/compare/v0.9.0...v0.10.0) (2026-07-09)
 
 ### Features

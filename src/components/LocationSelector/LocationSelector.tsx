@@ -15,7 +15,7 @@ import {
 import { useDeferredValue, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,17 +92,22 @@ function LoadingRows({ rows = 3, label }: { rows?: number; label: string }) {
 
 function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <Alert variant="destructive" className="mx-4 my-3">
+    <Alert variant="destructive" className="mx-4 my-3 items-center">
       <AlertCircle aria-hidden="true" />
       <AlertTitle>Couldn&apos;t load this list</AlertTitle>
       <AlertDescription>{message}</AlertDescription>
       {onRetry && (
-        <div className="mt-3">
-          <Button onClick={onRetry} variant="outline" size="sm">
+        <AlertAction className="top-1/2 -translate-y-1/2">
+          <Button
+            onClick={onRetry}
+            variant="outline"
+            size="sm"
+            className="border-destructive/40 bg-transparent text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
             <RotateCcw data-icon="inline-start" aria-hidden="true" />
             Retry
           </Button>
-        </div>
+        </AlertAction>
       )}
     </Alert>
   );

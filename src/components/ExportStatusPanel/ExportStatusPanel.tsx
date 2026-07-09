@@ -122,24 +122,29 @@ export function ExportStatusPanel({
   }
 
   if (status === "error") {
+    // A partial result means the poll returned a downloadable workbook even
+    // though the job ended with errors — surface what was parsed so the user
+    // knows the downloaded file is not empty.
+    const hasPartialResult = recordCount !== null || warningCount !== null;
     return (
-      <Alert
-        variant={recordCount !== null || warningCount !== null ? "default" : "destructive"}
-        className="rounded-2xl shadow-sm"
-      >
+      <Alert variant={hasPartialResult ? "default" : "destructive"} className="rounded-2xl shadow-sm">
         <AlertCircle aria-hidden="true" />
-        <AlertTitle>
-          {recordCount !== null || warningCount !== null ? "Export finished with issues" : "Export failed"}
-        </AlertTitle>
+        <AlertTitle>{hasPartialResult ? "Export finished with issues" : "Export failed"}</AlertTitle>
         <AlertDescription className="break-words">{errorMessage}</AlertDescription>
-        <div className="mt-3">
+        <div className="col-start-2 flex flex-col gap-3">
+          {hasPartialResult && (
+            <div className="mt-3 flex gap-3 text-sm">
+              {recordCount && <StatCard label="Records" value={recordCount} />}
+              {warningCount && <StatCard label="Warnings" value={warningCount} />}
+            </div>
+          )}
           <Button
             type="button"
             onClick={onReset}
             variant="link"
-            className="h-auto justify-start px-0 text-xs text-inherit"
+            className="mt-1 h-auto justify-start px-0 text-xs text-inherit"
           >
-            Try again
+            {hasPartialResult ? "Run another export" : "Try again"}
           </Button>
         </div>
       </Alert>

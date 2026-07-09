@@ -102,7 +102,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry?: () => voi
             onClick={onRetry}
             variant="outline"
             size="sm"
-            className="border-destructive/40 bg-transparent text-destructive hover:bg-destructive/10 hover:text-destructive"
+            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive bg-transparent"
           >
             <RotateCcw data-icon="inline-start" aria-hidden="true" />
             Retry
@@ -663,7 +663,7 @@ function DistrictGroup({
       onValueChange={(next) => setExpanded(next === "open")}
     >
       <AccordionItem className="last:border-b-0" value="open">
-        <AccordionTrigger className="px-4" aria-describedby={isInvalid ? errorId : undefined}>
+        <AccordionTrigger className="px-4 hover:no-underline" aria-describedby={isInvalid ? errorId : undefined}>
           <div className="flex w-full items-center gap-2.5 pr-2">
             <span className="text-foreground min-w-0 flex-1 truncate text-left text-sm font-semibold">
               {region.countyName}
@@ -689,7 +689,7 @@ function DistrictGroup({
         <AccordionContent className="bg-muted/20 h-auto pb-0">
           {isInvalid && !isLoading && !isError && (
             <>
-              <Alert id={errorId} variant="destructive" className="m-3 mb-0">
+              <Alert id={errorId} variant="destructive" className="m-3 w-auto">
                 <AlertCircle aria-hidden="true" />
                 <AlertTitle>District selection required</AlertTitle>
                 <AlertDescription>Select at least one district for {region.countyName}.</AlertDescription>

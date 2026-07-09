@@ -35,6 +35,8 @@ npm run dev
 ```
 
 The Vite dev server proxies EDJOIN metadata requests from `/__edjoin_proxy/*` to `https://www.edjoin.org`.
+Production builds send metadata requests through `${VITE_API_BASE_URL}/api/edjoin/metadata/*`, where the FastAPI
+backend proxies the fixed EDJOIN metadata endpoints.
 
 ## Environment
 

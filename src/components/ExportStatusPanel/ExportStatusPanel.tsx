@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle2, Download, Loader2, TriangleAlert } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,26 +127,21 @@ export function ExportStatusPanel({
     // knows the downloaded file is not empty.
     const hasPartialResult = recordCount !== null || warningCount !== null;
     return (
-      <Alert variant={hasPartialResult ? "default" : "destructive"} className="rounded-2xl shadow-sm">
+      <Alert variant={hasPartialResult ? "default" : "destructive"} className="rounded-2xl pr-28 shadow-sm">
         <AlertCircle aria-hidden="true" />
         <AlertTitle>{hasPartialResult ? "Export finished with issues" : "Export failed"}</AlertTitle>
         <AlertDescription className="break-words">{errorMessage}</AlertDescription>
-        <div className="col-start-2 flex flex-col gap-3">
-          {hasPartialResult && (
-            <div className="mt-3 flex gap-3 text-sm">
-              {recordCount && <StatCard label="Records" value={recordCount} />}
-              {warningCount && <StatCard label="Warnings" value={warningCount} />}
-            </div>
-          )}
-          <Button
-            type="button"
-            onClick={onReset}
-            variant="link"
-            className="mt-1 h-auto justify-start px-0 text-xs text-inherit"
-          >
-            {hasPartialResult ? "Run another export" : "Try again"}
+        {hasPartialResult && (
+          <div className="col-start-2 mt-3 flex gap-3 text-sm">
+            {recordCount && <StatCard label="Records" value={recordCount} />}
+            {warningCount && <StatCard label="Warnings" value={warningCount} />}
+          </div>
+        )}
+        <AlertAction>
+          <Button type="button" onClick={onReset} variant="outline" size="sm">
+            Try again
           </Button>
-        </div>
+        </AlertAction>
       </Alert>
     );
   }

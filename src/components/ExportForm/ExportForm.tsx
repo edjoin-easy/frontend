@@ -134,10 +134,10 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
   const incompleteRegionIds = selectedRegions
     .filter((region) => region.children.length === 0)
     .map((region) => String(region.searchRegionId));
-  const locationIds = selectedRegions.flatMap((region) =>
-    region.children.map((district) => String(district.districtId))
-  );
-  const hasNoSelections = locationIds.length === 0;
+  // No regions added at all is a distinct state from "regions added but missing
+  // districts" — each needs its own message so the guidance matches what the
+  // user can see in the summary panel.
+  const hasNoRegions = selectedRegions.length === 0;
   const hasIncompleteSelections = incompleteRegionIds.length > 0;
   const invalidRegionIds = hasTriedSubmit ? incompleteRegionIds : [];
 
@@ -145,7 +145,7 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
     <form
       onSubmit={handleSubmit(async (values) => {
         setHasTriedSubmit(true);
-        if (hasNoSelections || hasIncompleteSelections) {
+        if (hasNoRegions || hasIncompleteSelections) {
           return;
         }
         await onSubmit(values);
@@ -155,7 +155,7 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
       noValidate
     >
       <FieldGroup>
-        <Field data-invalid={(hasTriedSubmit && (hasNoSelections || hasIncompleteSelections)) || undefined}>
+        <Field data-invalid={(hasTriedSubmit && (hasNoRegions || hasIncompleteSelections)) || undefined}>
           <FieldContent>
             <FieldTitle className="text-lg font-semibold tracking-tight">
               Location
@@ -184,7 +184,7 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
               disabled={isLoading}
               invalidRegionIds={invalidRegionIds}
             />
-            {!isLoading && hasTriedSubmit && hasIncompleteSelections && !hasNoSelections ? (
+            {!isLoading && hasTriedSubmit && hasIncompleteSelections ? (
               <FieldError>
                 {`Select districts for ${incompleteRegionIds.length} region${incompleteRegionIds.length === 1 ? "" : "s"} above.`}
               </FieldError>
@@ -254,7 +254,7 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
 
       {/* ── Submit ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3">
-        {!isLoading && hasTriedSubmit && hasNoSelections ? (
+        {!isLoading && hasTriedSubmit && hasNoRegions ? (
           <Alert variant="destructive" aria-live="polite">
             <AlertCircle aria-hidden="true" />
             <AlertTitle>No locations selected</AlertTitle>

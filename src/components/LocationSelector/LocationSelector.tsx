@@ -758,7 +758,6 @@ function DistrictGroup({
               ) : (
                 <ScrollArea
                   className="max-h-[calc(5*2.5rem+0.5rem)]"
-                  viewportClassName="[&>div]:!block [&>div]:min-w-0"
                   style={{ height: `${districtScrollHeightRem}rem` }}
                 >
                   <div className="py-1">

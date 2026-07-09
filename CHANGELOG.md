@@ -1,3 +1,9 @@
+## [0.10.0](https://github.com/edjoin-easy/frontend/compare/v0.9.0...v0.10.0) (2026-07-09)
+
+### Features
+
+* update state management ([372b79a](https://github.com/edjoin-easy/frontend/commit/372b79a72572ff1db93b731f6e20040680456713))
+
 ## [0.9.0](https://github.com/edjoin-easy/frontend/compare/v0.8.0...v0.9.0) (2026-07-08)
 
 ### Features

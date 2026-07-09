@@ -219,7 +219,15 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
                       )}
                     />
                     <FieldDescription id="include-keywords-hint">
-                      Press Enter to add. Backspace removes the last keyword.
+                      Press{" "}
+                      <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                        Enter
+                      </kbd>{" "}
+                      to add.{" "}
+                      <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
+                        Backspace
+                      </kbd>{" "}
+                      removes the last keyword.
                     </FieldDescription>
                   </FieldContent>
                 </Field>

@@ -38,12 +38,29 @@ interface EdjoinDistrictsResponse {
 // Query surfaces it through each list's inline ErrorState + Retry affordance.
 export const EDJOIN_UNAVAILABLE_MESSAGE = "EDJOIN is not available right now. Please try again in a moment.";
 
-const EDJOIN_STATES_URL = "/__edjoin_proxy/Home/LoadStates";
-const EDJOIN_SEARCH_REGIONS_URL = "/__edjoin_proxy/Home/LoadSearchRegions";
-const EDJOIN_DISTRICTS_URL = "/__edjoin_proxy/Home/LoadDistricts";
+function metadataUrl(endpoint: "districts" | "search-regions" | "states") {
+  if (import.meta.env.DEV) {
+    const localPaths = {
+      districts: "LoadDistricts",
+      "search-regions": "LoadSearchRegions",
+      states: "LoadStates"
+    };
+
+    return `/__edjoin_proxy/Home/${localPaths[endpoint]}`;
+  }
+
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+
+  if (!configuredBaseUrl) {
+    throw new Error("Missing VITE_API_BASE_URL. Configure the frontend to point at the project backend.");
+  }
+
+  const baseUrl = configuredBaseUrl.includes("://") ? configuredBaseUrl : `https://${configuredBaseUrl}`;
+  return new URL(`/api/edjoin/metadata/${endpoint}`, baseUrl).toString();
+}
 
 export async function loadEdjoinStates() {
-  const response = await fetch(EDJOIN_STATES_URL);
+  const response = await fetch(metadataUrl("states"));
 
   if (!response.ok) {
     throw new Error(`LoadStates failed with status ${response.status}`);
@@ -59,7 +76,9 @@ export async function loadEdjoinStates() {
 }
 
 export async function loadEdjoinSearchRegions(stateId: string) {
-  const response = await fetch(`${EDJOIN_SEARCH_REGIONS_URL}?states=${encodeURIComponent(stateId)}`);
+  const url = new URL(metadataUrl("search-regions"));
+  url.searchParams.set("states", stateId);
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(`LoadSearchRegions failed with status ${response.status}`);
@@ -75,7 +94,9 @@ export async function loadEdjoinSearchRegions(stateId: string) {
 }
 
 export async function loadEdjoinDistricts(countyId: string) {
-  const response = await fetch(`${EDJOIN_DISTRICTS_URL}?countyID=${encodeURIComponent(countyId)}`);
+  const url = new URL(metadataUrl("districts"));
+  url.searchParams.set("countyID", countyId);
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(`LoadDistricts failed with status ${response.status}`);

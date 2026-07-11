@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { analyticsEvents, trackEvent } from "@/lib/analytics";
 import {
   loadEdjoinDistricts,
   loadEdjoinSearchRegions,
@@ -34,6 +34,7 @@ import {
   type EdjoinSearchRegion,
   type EdjoinState
 } from "@/lib/edjoin";
+import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -133,6 +134,10 @@ function EmptyState({ message, onClear }: { message: string; onClear?: () => voi
 
 const DISTRICT_ROW_HEIGHT_REM = 2.5;
 const DISTRICT_SCROLL_PADDING_REM = 0.5;
+
+function countSelectedDistricts(regions: SelectedSearchRegionNode[]) {
+  return regions.reduce((sum, region) => sum + region.children.length, 0);
+}
 
 function StepBadge({ step, completed, locked }: { step: number; completed: boolean; locked: boolean }) {
   return (
@@ -962,6 +967,12 @@ export function LocationSelector({ value, onChange, disabled, invalidRegionIds =
   const regions = state?.children ?? [];
 
   function handleStateChange(nextState: EdjoinState | null) {
+    trackEvent(nextState ? analyticsEvents.stateSelected : analyticsEvents.stateCleared, {
+      selected_district_count: 0,
+      selected_region_count: 0,
+      state_job_count: nextState?.jobs ?? 0
+    });
+
     onChange(
       nextState
         ? {
@@ -980,13 +991,26 @@ export function LocationSelector({ value, onChange, disabled, invalidRegionIds =
 
     const exists = regions.some((selectedRegion) => selectedRegion.searchRegionId === region.countyID);
     if (exists) {
+      const nextRegions = regions.filter((selectedRegion) => selectedRegion.searchRegionId !== region.countyID);
+      trackEvent(analyticsEvents.regionUnselected, {
+        region_posting_count: region.numberPostings,
+        selected_district_count: countSelectedDistricts(nextRegions),
+        selected_region_count: nextRegions.length
+      });
+
       onChange({
         state: {
           ...state,
-          children: regions.filter((selectedRegion) => selectedRegion.searchRegionId !== region.countyID)
+          children: nextRegions
         }
       });
     } else {
+      trackEvent(analyticsEvents.regionSelected, {
+        region_posting_count: region.numberPostings,
+        selected_district_count: countSelectedDistricts(regions),
+        selected_region_count: regions.length + 1
+      });
+
       onChange({
         state: {
           ...state,
@@ -1008,6 +1032,15 @@ export function LocationSelector({ value, onChange, disabled, invalidRegionIds =
   function handleDistrictToggle(countyID: number, district: EdjoinDistrict) {
     if (!state) return;
 
+    const currentRegion = regions.find((selectedRegion) => selectedRegion.searchRegionId === countyID);
+    const exists =
+      currentRegion?.children.some((selectedDistrict) => selectedDistrict.districtId === district.districtID) ?? false;
+    trackEvent(exists ? analyticsEvents.districtDeselected : analyticsEvents.districtSelected, {
+      district_posting_count: district.numberPostings,
+      selected_district_count: countSelectedDistricts(regions) + (exists ? -1 : 1),
+      selected_region_count: regions.length
+    });
+
     onChange({
       state: {
         ...state,
@@ -1027,6 +1060,14 @@ export function LocationSelector({ value, onChange, disabled, invalidRegionIds =
 
   function handleSelectAllDistricts(countyID: number, allDistricts: EdjoinDistrict[]) {
     if (!state) return;
+
+    const currentRegion = regions.find((selectedRegion) => selectedRegion.searchRegionId === countyID);
+    const currentDistrictCount = currentRegion?.children.length ?? 0;
+    trackEvent(analyticsEvents.districtSelectAll, {
+      district_count: allDistricts.length,
+      selected_district_count: countSelectedDistricts(regions) - currentDistrictCount + allDistricts.length,
+      selected_region_count: regions.length
+    });
 
     onChange({
       state: {
@@ -1049,6 +1090,14 @@ export function LocationSelector({ value, onChange, disabled, invalidRegionIds =
 
   function handleDeselectAllDistricts(countyID: number) {
     if (!state) return;
+
+    const currentRegion = regions.find((selectedRegion) => selectedRegion.searchRegionId === countyID);
+    const currentDistrictCount = currentRegion?.children.length ?? 0;
+    trackEvent(analyticsEvents.districtDeselectAll, {
+      district_count: currentDistrictCount,
+      selected_district_count: countSelectedDistricts(regions) - currentDistrictCount,
+      selected_region_count: regions.length
+    });
 
     onChange({
       state: {
@@ -1086,15 +1135,25 @@ export function LocationSelector({ value, onChange, disabled, invalidRegionIds =
   function handleRemoveRegion(countyID: number) {
     if (!state) return;
 
+    const nextRegions = regions.filter((selectedRegion) => selectedRegion.searchRegionId !== countyID);
+    trackEvent(analyticsEvents.regionRemoved, {
+      selected_district_count: countSelectedDistricts(nextRegions),
+      selected_region_count: nextRegions.length
+    });
+
     onChange({
       state: {
         ...state,
-        children: regions.filter((selectedRegion) => selectedRegion.searchRegionId !== countyID)
+        children: nextRegions
       }
     });
   }
 
   function handleClearAll() {
+    trackEvent(analyticsEvents.selectionCleared, {
+      selected_district_count: countSelectedDistricts(regions),
+      selected_region_count: regions.length
+    });
     onChange({ state: null });
   }
 

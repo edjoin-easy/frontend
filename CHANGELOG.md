@@ -1,3 +1,9 @@
+## [0.14.0](https://github.com/edjoin-easy/frontend/compare/v0.13.0...v0.14.0) (2026-07-11)
+
+### Features
+
+* fix combobox scrollbar ([eeaad26](https://github.com/edjoin-easy/frontend/commit/eeaad263997574f7c52708cf2bdb79ae63bce292))
+
 ## [0.13.0](https://github.com/edjoin-easy/frontend/compare/v0.12.0...v0.13.0) (2026-07-11)
 
 ### Features

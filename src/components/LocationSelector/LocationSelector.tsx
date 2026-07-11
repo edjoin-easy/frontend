@@ -239,6 +239,7 @@ function StateSelector({
   const showMinCharHint = !isLoading && !isError && query.length > 0 && trimmed.length < 2;
   const activeIndex = Math.min(focusedIndex, Math.max(filtered.length - 1, 0));
   const activeOptionId = filtered.length > 0 ? `${optionIdPrefix}-${filtered[activeIndex].stateID}` : undefined;
+  const hasScrollableStateList = !isLoading && !isError && !showMinCharHint && filtered.length > 5;
 
   function indexOfSelected(list: EdjoinState[]) {
     if (!value) return 0;
@@ -385,7 +386,7 @@ function StateSelector({
             aria-label="Available states"
             className="bg-popover absolute right-0 left-0 z-50 mt-1.5 rounded-xl py-1 shadow-xl"
           >
-            <ScrollArea className="max-h-64">
+            <ScrollArea className={cn("max-h-64", hasScrollableStateList && "h-64")}>
               {isLoading && <LoadingRows rows={3} label="Loading states" />}
 
               {!isLoading && isError && <ErrorState message="Failed to load states." onRetry={() => void refetch()} />}

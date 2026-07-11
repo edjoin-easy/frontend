@@ -1,3 +1,9 @@
+## [0.12.0](https://github.com/edjoin-easy/frontend/compare/v0.11.0...v0.12.0) (2026-07-11)
+
+### Features
+
+* add simple analytics tracking and favicon ([b8a81cc](https://github.com/edjoin-easy/frontend/commit/b8a81ccad8d5c37c0eaaec1d89b5a4f889035af8))
+
 ## [0.11.0](https://github.com/edjoin-easy/frontend/compare/v0.10.0...v0.11.0) (2026-07-09)
 
 ### Features

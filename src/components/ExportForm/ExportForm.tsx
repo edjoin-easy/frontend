@@ -16,6 +16,7 @@ import {
   FieldTitle
 } from "@/components/ui/field";
 import { KeywordChipsInput } from "../KeywordChipsInput/KeywordChipsInput";
+import { analyticsEvents, trackEvent } from "@/lib/analytics";
 import {
   LocationSelector,
   type LocationSelection,
@@ -141,11 +142,30 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
   const hasIncompleteSelections = incompleteRegionIds.length > 0;
   const invalidRegionIds = hasTriedSubmit ? incompleteRegionIds : [];
 
+  function handleKeywordChange(kind: "exclude" | "include", current: string[], next: string[]) {
+    if (next.length > current.length) {
+      trackEvent(analyticsEvents.keywordAdded, {
+        keyword_count: next.length,
+        keyword_type: kind
+      });
+    } else if (next.length < current.length) {
+      trackEvent(analyticsEvents.keywordRemoved, {
+        keyword_count: next.length,
+        keyword_type: kind
+      });
+    }
+  }
+
   return (
     <form
       onSubmit={handleSubmit(async (values) => {
         setHasTriedSubmit(true);
         if (hasNoRegions || hasIncompleteSelections) {
+          trackEvent(analyticsEvents.exportSubmitInvalid, {
+            incomplete_region_count: incompleteRegionIds.length,
+            reason: hasNoRegions ? "no_regions" : "incomplete_regions",
+            region_count: selectedRegions.length
+          });
           return;
         }
         await onSubmit(values);
@@ -212,7 +232,10 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
                           id="include-keywords"
                           ariaDescribedBy="include-keywords-hint"
                           value={field.value}
-                          onChange={field.onChange}
+                          onChange={(next) => {
+                            handleKeywordChange("include", field.value, next);
+                            field.onChange(next);
+                          }}
                           disabled={isLoading}
                           placeholder="Type a keyword and press Enter"
                         />
@@ -243,7 +266,10 @@ export function ExportForm({ isLoading, onSubmit }: ExportFormProps) {
                           id="exclude-keywords"
                           ariaDescribedBy="exclude-keywords-hint"
                           value={field.value}
-                          onChange={field.onChange}
+                          onChange={(next) => {
+                            handleKeywordChange("exclude", field.value, next);
+                            field.onChange(next);
+                          }}
                           disabled={isLoading}
                           placeholder="Type a keyword and press Enter"
                         />
